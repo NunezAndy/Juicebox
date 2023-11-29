@@ -17,8 +17,8 @@ async function createUser({
 }) {
   try {
     const { rows: [ user ] } = await client.query(`
-      INSERT INTO users(username, password, name) 
-      VALUES($1, $2, $3) 
+      INSERT INTO users(username, password, name, location) 
+      VALUES($1, $2, $3, $4) 
       ON CONFLICT (username) DO NOTHING 
       RETURNING *;
     `, [username, password, name, location]);
@@ -354,6 +354,23 @@ async function getAllTags() {
   }
 }
 
+async function destroyPost(id) {
+  try {
+    await client.query(`
+      DELETE FROM post_tags
+      WHERE "postId" = $1;
+    `, [id]);
+    const {rows: [post]} = await client.query(`
+      DELETE FROM posts
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+    return post;
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {  
   client,
   createUser,
@@ -370,5 +387,6 @@ module.exports = {
   createTags,
   getAllTags,
   createPostTag,
-  addTagsToPost
+  addTagsToPost,
+  destroyPost
 }
